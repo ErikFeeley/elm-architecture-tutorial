@@ -1,16 +1,18 @@
+module Main exposing (..)
+
 import Html exposing (..)
 import Html.Events exposing (..)
-import Random
+import Random exposing (Generator, generate, int, pair)
 
 
-
+main : Program Never Model Msg
 main =
-  Html.program
-    { init = init
-    , view = view
-    , update = update
-    , subscriptions = subscriptions
-    }
+    Html.program
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
 
 
 
@@ -18,13 +20,15 @@ main =
 
 
 type alias Model =
-  { dieFace : Int
-  }
+    { dieFaceOne : Int
+    , dieFaceTwo : Int
+    , dieMatch : Bool
+    }
 
 
-init : (Model, Cmd Msg)
+init : ( Model, Cmd Msg )
 init =
-  (Model 1, Cmd.none)
+    ( Model 1 3 False, Cmd.none )
 
 
 
@@ -32,18 +36,29 @@ init =
 
 
 type Msg
-  = Roll
-  | NewFace Int
+    = Roll
+    | NewFace ( Int, Int )
 
 
-update : Msg -> Model -> (Model, Cmd Msg)
+rollTwoDie : Generator ( Int, Int )
+rollTwoDie =
+    pair (int 1 6) (int 1 6)
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-  case msg of
-    Roll ->
-      (model, Random.generate NewFace (Random.int 1 6))
+    case msg of
+        Roll ->
+            ( model, generate NewFace rollTwoDie )
 
-    NewFace newFace ->
-      (Model newFace, Cmd.none)
+        NewFace ( faceOne, faceTwo ) ->
+            ( { model
+                | dieFaceOne = faceOne
+                , dieFaceTwo = faceTwo
+                , dieMatch = faceOne == faceTwo
+              }
+            , Cmd.none
+            )
 
 
 
@@ -52,7 +67,7 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Sub.none
+    Sub.none
 
 
 
@@ -61,7 +76,9 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
-  div []
-    [ h1 [] [ text (toString model.dieFace) ]
-    , button [ onClick Roll ] [ text "Roll" ]
-    ]
+    div []
+        [ h1 [] [ text (toString model.dieFaceOne) ]
+        , h1 [] [ text (toString model.dieFaceTwo) ]
+        , h1 [] [ text (toString model.dieMatch) ]
+        , button [ onClick Roll ] [ text "Roll" ]
+        ]
