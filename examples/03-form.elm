@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput)
+import Html.Events exposing (onClick, onInput)
 import String
 
 
@@ -23,12 +23,14 @@ type alias Model =
     { name : String
     , password : String
     , passwordAgain : String
+    , submitted : Bool
+    , formErrors : List String
     }
 
 
 model : Model
 model =
-    Model "" "" ""
+    Model "" "" "" False []
 
 
 
@@ -39,6 +41,7 @@ type Msg
     = Name String
     | Password String
     | PasswordAgain String
+    | Submit
 
 
 update : Msg -> Model -> Model
@@ -53,6 +56,9 @@ update msg model =
         PasswordAgain password ->
             { model | passwordAgain = password }
 
+        Submit ->
+            { model | submitted = True, formErrors = validatePassword model.password model.passwordAgain }
+
 
 
 -- VIEW
@@ -64,6 +70,9 @@ view model =
         [ input [ type_ "text", placeholder "Name", onInput Name ] []
         , input [ type_ "password", placeholder "Password", onInput Password ] []
         , input [ type_ "password", placeholder "Re-enter Password", onInput PasswordAgain ] []
+        , div []
+            [ button [ onClick Submit ] [ text "Submit" ]
+            ]
         , viewValidation model
         ]
 
@@ -72,9 +81,8 @@ viewValidation : Model -> Html msg
 viewValidation model =
     let
         errors =
-            List.map
-                (\error -> li [ style [ ( "color", "red" ) ] ] [ text error ])
-                (validatePassword model.password model.passwordAgain)
+            model.formErrors
+                |> List.map (\error -> li [ style [ ( "color", "red" ) ] ] [ text error ])
     in
     ul [] errors
 
