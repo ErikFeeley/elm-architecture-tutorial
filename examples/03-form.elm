@@ -103,5 +103,10 @@ validatePassword pass passAgain =
             ]
     in
     validations
-        |> List.filter .condition
-        |> List.map .errorMessage
+        |> List.filterMap
+            (\val ->
+                if val.condition then
+                    Just val.errorMessage
+                else
+                    Nothing
+            )
