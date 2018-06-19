@@ -9,7 +9,7 @@ import String
 main : Program Never Model Msg
 main =
     Html.beginnerProgram
-        { model = model
+        { model = init
         , view = view
         , update = update
         }
@@ -28,8 +28,8 @@ type alias Model =
     }
 
 
-model : Model
-model =
+init : Model
+init =
     Model "" "" "" False []
 
 
@@ -39,52 +39,9 @@ model =
 
 type Msg
     = Name String
-    | Password String
-    | PasswordAgain String
+    | SetPassword String
+    | SetPasswordAgain String
     | Submit
-
-
-update : Msg -> Model -> Model
-update msg model =
-    case msg of
-        Name name ->
-            { model | name = name }
-
-        Password password ->
-            { model | password = password }
-
-        PasswordAgain password ->
-            { model | passwordAgain = password }
-
-        Submit ->
-            { model | submitted = True, formErrors = validatePassword model.password model.passwordAgain }
-
-
-
--- VIEW
-
-
-view : Model -> Html Msg
-view model =
-    div []
-        [ input [ type_ "text", placeholder "Name", onInput Name ] []
-        , input [ type_ "password", placeholder "Password", onInput Password ] []
-        , input [ type_ "password", placeholder "Re-enter Password", onInput PasswordAgain ] []
-        , div []
-            [ button [ onClick Submit ] [ text "Submit" ]
-            ]
-        , viewValidation model
-        ]
-
-
-viewValidation : Model -> Html msg
-viewValidation model =
-    let
-        errors =
-            model.formErrors
-                |> List.map (\error -> li [ style [ ( "color", "red" ) ] ] [ text error ])
-    in
-    ul [] errors
 
 
 type alias Validation =
@@ -110,3 +67,46 @@ validatePassword pass passAgain =
                 else
                     Nothing
             )
+
+
+update : Msg -> Model -> Model
+update msg model =
+    case msg of
+        Name name ->
+            { model | name = name }
+
+        SetPassword password ->
+            { model | password = password, formErrors = [] }
+
+        SetPasswordAgain password ->
+            { model | passwordAgain = password, formErrors = [] }
+
+        Submit ->
+            { model | submitted = True, formErrors = validatePassword model.password model.passwordAgain }
+
+
+
+-- VIEW
+
+
+view : Model -> Html Msg
+view model =
+    div []
+        [ input [ type_ "text", placeholder "Name", onInput Name ] []
+        , input [ type_ "password", placeholder "Password", onInput SetPassword ] []
+        , input [ type_ "password", placeholder "Re-enter Password", onInput SetPasswordAgain ] []
+        , div []
+            [ button [ onClick Submit ] [ text "Submit" ]
+            ]
+        , viewValidation model.formErrors
+        ]
+
+
+viewValidation : List String -> Html msg
+viewValidation formErrors =
+    let
+        errors =
+            formErrors
+                |> List.map (\error -> li [ style [ ( "color", "red" ) ] ] [ text error ])
+    in
+    ul [] errors
